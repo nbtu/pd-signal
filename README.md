@@ -1,7 +1,7 @@
 # pd-signal
 监控多个pandalive主播的直播状态，并发送开播、下播提醒消息的Telegram Bot。  
 
-根据此项目修改而来 https://github.com/juzeon/dd-signalm ，使用安装请前往查看原项目  
+根据此项目修改而来 https://github.com/juzeon/dd-signal ，使用安装请前往查看原项目  
 
 修改监控网站   
 移除vdb虚拟主播列表   
