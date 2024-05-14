@@ -7,6 +7,19 @@
 移除vdb虚拟主播列表   
 增加黑白名单限制Bot的使用，默认whitelist/blacklist为空，所有人都可以使用bot，在index.js文件顶部添加黑白名单。   
 
+v2    
+增加一个用户数据表，用于存放黑白名单    
+增加一个--pass(默认为kbjba)启动参数，用户使用管理命令    
+>    命令列表：
+>     
+>     /admin <pass> - 显示本消息。
+>     /whitelist <pass> <tgid> - 添加白名单。
+>     /blacklist <pass> <tgid> - 添加黑名单。
+>     /delwhitelist <pass> <tgid> - 删除白名单。
+>     /delblacklist <pass> <tgid>- 删除黑名单。
+>     /userlist <pass> - 显示黑白名单。
+>     默认是所有用户都可以使用，当白名单不为空是启用白名单。
+  
 记录：     
 添加监控主播到关注列表，程序开始循环检测开播状态。    
 当前方法是循环检测主播页面信息，只监控不仅直播间抓取直播源，不需要登录账号。    
