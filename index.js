@@ -1,5 +1,5 @@
-#默认whitelist/blacklist为空，所有人都可以使用bot
-#使用格式例子 const whitelist = [123,456];
+//默认whitelist/blacklist为空，所有人都可以使用bot
+//使用格式例子 const whitelist = [123,456];
 const whitelist = [];
 const blacklist = [];
 
