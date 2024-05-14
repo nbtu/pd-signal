@@ -1,0 +1,21 @@
+{
+  "name": "dd-signal",
+  "version": "1.0.0",
+  "description": "监控多个B站主播的直播状态，并发送开播、下播提醒消息的Telegram Bot。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "juzeon",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "better-sqlite3": "^7.1.2",
+    "minimist": "^1.2.5",
+    "node-global-proxy": "^1.0.1",
+    "node-telegram-bot-api": "^0.51.0",
+    "strip-indent": "^3.0.0",
+    "url-parse": "^1.5.1"
+  }
+}
