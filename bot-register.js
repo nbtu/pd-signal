@@ -2,7 +2,7 @@ const $ = require('./includes');
 const stripIndent = require('strip-indent');
 const dbm = require('./dbm');
 
-module.exports = function(whitelist, blacklist) {
+module.exports = function(whitelist, blacklist, pass) {
     return function() {
         
     function authorize(userId, whitelist, blacklist) {
@@ -17,7 +17,7 @@ module.exports = function(whitelist, blacklist) {
             // 默认情况下，所有人都可以使用bot
             return true;
     }       
-    
+    //console.log(pass)
     $.bot.onText(/\/start/, (msg) => {
         if (!authorize(msg.from.id, whitelist, blacklist)) {
             $.bot.sendMessage(msg.chat.id, '您未被授权使用此bot，输入 /id 查询你的id。');
@@ -27,6 +27,7 @@ module.exports = function(whitelist, blacklist) {
             + $.parseTgUserNickname(msg.from)
             + '\n您可以输入 /help 查看命令帮助。', $.defTgMsgForm);
     });
+    
     $.bot.onText(/\/help/, msg => {
         $.bot.sendMessage(msg.chat.id, stripIndent(`
     命令列表：
@@ -35,6 +36,7 @@ module.exports = function(whitelist, blacklist) {
     /add \`<用户ID>\` - 添加新主播至监控列表。
     /del \`<用户ID>\` - 输入后，在弹出的键盘中选择需要删除的主播。
     /list - 查看您的监控列表。
+    /admin <pass> - 管理黑白名单。
     /help - 显示帮助。
     🎥-->放录像|🔒-->密码房|🔞-->限制房|💰-->粉丝房。
     `), $.defTgMsgForm);
@@ -43,9 +45,8 @@ module.exports = function(whitelist, blacklist) {
     $.bot.onText(/\/id/, msg => {
         $.bot.sendMessage(msg.chat.id, '您的 Telegram ID 是：' + msg.from.id );
     });
-    
-    $.bot.on('text',msg=>{
 
+    $.bot.on('text',msg=>{
         if(msg.text.toString().startsWith('❌  ')){
             let username=msg.text.toString().slice(3).trim();
             let vtb=dbm.getVtbByUsername(username);
@@ -70,8 +71,9 @@ module.exports = function(whitelist, blacklist) {
             }
             _addWatchByMid(msg,vtbList[0].mid);
         }//else{
-//            $.bot.sendMessage(msg.chat.id, '您未被授权使用此bot.');
-//            return;
+//            $.bot.sendMessage(msg.chat.id, '嗨，'
+//                + $.parseTgUserNickname(msg.from)
+//                + '\n您可以输入 /help 查看命令帮助。', $.defTgMsgForm);
 //        }
     });
     $.bot.onText(/\/search (.+)/,(msg,match)=>{
@@ -120,7 +122,7 @@ module.exports = function(whitelist, blacklist) {
             return;
         }
         let mid=match[1].toString().trim();
-        if(!$.isInt(mid)){
+        if(!mid){
             $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
             return;
         }
@@ -132,6 +134,151 @@ module.exports = function(whitelist, blacklist) {
         dbm.delWatch(msg.chat.id,mid);
         $.bot.sendMessage(msg.chat.id,'已删除主播 `'+vtb.username+'`。',$.defTgMsgForm);
     });
+    
+    /////////////////////////////////////
+    $.bot.onText(/^\/admin$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /admin <pass> 以查看命令列表。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/admin (.+)/, msg => {
+        const token = msg.text.split(' ')[1].trim(); // 获取密码部分
+        // 检查 token 是否匹配预定义的密码
+        if (token === pass) {
+
+            $.bot.sendMessage(msg.chat.id, stripIndent(`
+    命令列表：
+    
+    /admin <pass> - 显示本消息。
+    /whitelist <pass> <tgid> - 添加白名单。
+    /blacklist <pass> <tgid> - 添加黑名单。
+    /delwhitelist <pass> <tgid> - 删除白名单。
+    /delblacklist <pass> <tgid>- 删除黑名单。
+    /userlist <pass> - 显示黑白名单。
+    默认是所有用户都可以使用，当白名单不为空是启用白名单。
+            `), $.defTgMsgForm);
+        } else {
+        // 如果密码不匹配，发送错误消息
+            $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+    
+    
+    $.bot.onText(/^\/delwhitelist$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /delwhitelist <pass> <tgig> 删除白名单用户。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/delwhitelist\s+(.+)\s+(\d+)/,(msg,match)=>{
+        const token = match[1].trim();
+        // 检查 pass 是否匹配预定义的密码
+        if (token === pass) {
+            
+            let userId=match[2].toString().trim();
+            if(!$.isInt(userId)){
+                $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
+                return;
+            }
+            if(dbm.existsList(userId)){
+                $.bot.sendMessage(msg.chat.id,'该用户不白名单列表中。',$.defTgMsgForm);
+                return;
+            }
+            dbm.delList(userId, "whitelist");
+            whitelist=dbm.getListBystatus("whitelist");
+            $.bot.sendMessage(msg.chat.id,'已删除白名单用户 `'+userId+'`。',$.defTgMsgForm);
+        } else {
+            // 如果密码不匹配，发送错误消息
+            $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+    
+    $.bot.onText(/^\/delblacklist$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /delblacklist <pass> <tgig> 删除黑名单用户。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/delblacklist\s+(.+)\s+(\d+)/,(msg,match)=>{
+        const token = match[1].trim();
+        // 检查 pass 是否匹配预定义的密码
+        if (token === pass) {
+            
+            let userId=match[2].toString().trim();
+            if(!$.isInt(userId)){
+                $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
+                return;
+            }
+            if(dbm.existsList(userId)){
+                $.bot.sendMessage(msg.chat.id,'该用户不黑名单列表中。',$.defTgMsgForm);
+                return;
+            }
+            dbm.delList(userId, "blacklist");
+            blacklist=dbm.getListBystatus("blacklist");
+            $.bot.sendMessage(msg.chat.id,'已删除黑名单用户 `'+userId+'`。',$.defTgMsgForm);
+        } else {
+            // 如果密码不匹配，发送错误消息
+            $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+
+    $.bot.onText(/^\/whitelist$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /whitelist <pass> <tgig> 添加白名单用户。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/whitelist\s+(.+)\s+(\d+)/, (msg, match) => {
+        const token = match[1].trim();
+        // 检查 pass 是否匹配预定义的密码
+        if (token === pass) {
+            let userId=match[2].toString().trim();
+            console.log(userId);
+            if(!$.isInt(userId)){
+                $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
+                return;
+            }
+            if(dbm.existsList(userId)){
+                $.bot.sendMessage(msg.chat.id,'该TG已在名单中，状态' + dbm.getListBytgid(userId).status + '，要修改请先删除。',$.defTgMsgForm);
+                return;
+            }
+            dbm.addList(userId, "whitelist");
+            whitelist=dbm.getListBystatus("whitelist");
+            $.bot.sendMessage(msg.chat.id, '已添加用户 `' + userId + '`到白名单。', $.defTgMsgForm);
+        } else {
+        // 如果密码不匹配，发送错误消息
+        $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+    
+    $.bot.onText(/^\/blacklist$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /blacklist <pass> <tgid> 添加黑名单用户。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/blacklist\s+(.+)\s+(\d+)/, (msg, match) => {
+        const token = match[1].trim();
+        // 检查 pass 是否匹配预定义的密码
+        if (token === pass) {
+            let userId=match[2].toString().trim();
+            if(!$.isInt(userId)){
+                $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
+                return;
+            }
+            if(dbm.existsList(userId)){
+                $.bot.sendMessage(msg.chat.id,'该TG已在名单中，状态' + dbm.getListBytgid(userId).status + '，要修改请先删除。',$.defTgMsgForm);
+                return;
+            }
+            dbm.addList(userId, "blacklist");
+            blacklist=dbm.getListBystatus("blacklist");
+            $.bot.sendMessage(msg.chat.id, '已添加用户 `' + userId + '`到黑名单。', $.defTgMsgForm);
+        } else {
+            // 如果密码不匹配，发送错误消息
+            $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+    
+    $.bot.onText(/^\/userlist$/, msg => {
+        $.bot.sendMessage(msg.chat.id, '请输入 /userlist <pass> 以查看名单列表。', $.defTgMsgForm);
+    });
+    $.bot.onText(/\/userlist (.+)/, (msg, match) => {
+        const token = match[1].trim();
+        // 检查 pass 是否匹配预定义的密码
+        if (token === pass) {
+            $.bot.sendMessage(msg.chat.id, '白名单用户：' + whitelist + '\n\n黑名单用户：' + blacklist, $.defTgMsgForm);
+        } else {
+            // 如果密码不匹配，发送错误消息
+            $.bot.sendMessage(msg.chat.id, '密码错误，请重试。', $.defTgMsgForm);
+        }
+    });
+    
     $.bot.onText(/\/list/,msg=>{
         if (!authorize(msg.from.id, whitelist, blacklist)) {
             $.bot.sendMessage(msg.chat.id, '您未被授权使用此bot。');
@@ -142,12 +289,19 @@ module.exports = function(whitelist, blacklist) {
         message+=$.formatWatchMessagePartial(watchArr);
         $.bot.sendMessage(msg.chat.id,message,$.defTgMsgForm);
     });
-    $.bot.onText(/\/add (.+)/, async (msg,match) => {
+    $.bot.onText(/\/add (.+)/, (msg,match) => {
         if (!authorize(msg.from.id, whitelist, blacklist)) {
             $.bot.sendMessage(msg.chat.id, '您未被授权使用此bot。');
             return;
         }
-        let mid=match[1].toString().trim();
+        let param=match[1].toString().trim();
+        let mid;
+        if(param){
+            mid=param;
+        }else{
+            $.bot.sendMessage(msg.chat.id,'请输入正确的网址或ID。',$.defTgMsgForm);
+            return;
+        }
         $.bot.sendMessage(msg.chat.id,mid,$.defTgMsgForm);
         _addWatchByMid(msg,mid);
     });
@@ -158,6 +312,7 @@ function _addWatchByMid(msg,mid){
         $.bot.sendMessage(msg.chat.id,'该主播已在您的监控列表中。',$.defTgMsgForm);
         return;
     }
+    
     
     const FormData = require('form-data');
     const formData = new FormData();

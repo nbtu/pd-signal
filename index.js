@@ -1,25 +1,18 @@
-#默认whitelist/blacklist为空，所有人都可以使用bot
-#使用格式例子 const whitelist = [123,456];
-const whitelist = [];
-const blacklist = [];
-
 const args = require('minimist')(process.argv.slice(2));
 const urlParse = require('url-parse');
 const fs=require('fs');
 const path=require('path');
 const nodeGlobalProxy = require("node-global-proxy").default;
 const $ = require('./includes');
-const botRegister = require('./bot-register')(whitelist, blacklist);
 const dbm = require('./dbm');
 const FormData = require('form-data');
-
-
 
 const helpText = `
 参数：
   --interval <IntervalBySec> - 可选，每次访问B站API间隔的秒数，默认为10
   --token <TelegramBotToken> - 必选，Telegram Bot Token
   --proxy <HTTPProxy> - 可选，以 http:// 开头的代理
+  --pass <password> - 可选，默认 kbjba，用于管理黑白名单
 `;
 const interval = args.interval ? args.interval : 10;
 if (!$.isInt(interval)) {
@@ -31,6 +24,7 @@ if (!token) {
     console.log(helpText);
     process.exit(-1);
 }
+const pass = args.pass ? args.pass : "kbjba" ;
 $.bot.token = token;
 const proxy = args.proxy;
 if (proxy) {
@@ -50,6 +44,12 @@ if (proxy) {
     // };
 
 }
+let whitelist = dbm.getListBystatus("whitelist");
+let blacklist = dbm.getListBystatus("blacklist");
+console.log(whitelist);
+console.log(blacklist);
+const botRegister = require('./bot-register')(whitelist, blacklist, pass);
+
 botRegister();
 $.bot.startPolling();
 let vtbs = dbm.getVtbs();
@@ -148,3 +148,27 @@ async function notifySubscriberChats(vtb){
     // 其他逻辑
     setImmediate(rotate);
 })();
+
+
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  // 读取 log.txt 文件内容
+  fs.readFile('log.txt', 'utf8', (err, data) => {
+    if (err) {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Error reading log file');
+      return;
+    }
+
+    // 设置响应头
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    // 将 log.txt 文件内容写入响应
+    res.end(data);
+  });
+});
+
+server.listen(3000, () => {
+  console.log('日志服务器已启动，正在监听端口 3000');
+});
+
