@@ -1,5 +1,5 @@
-//默认whitelist/blacklist为空，所有人都可以使用bot
-//使用格式例子 const whitelist = [123,456];
+#默认whitelist/blacklist为空，所有人都可以使用bot
+#使用格式例子 const whitelist = [123,456];
 const whitelist = [];
 const blacklist = [];
 
@@ -17,7 +17,7 @@ const FormData = require('form-data');
 
 const helpText = `
 参数：
-  --interval <IntervalBySec> - 可选，每次访问B站API间隔的秒数，默认为10
+  --interval <IntervalBySec> - 可选，每次访问API间隔的秒数，默认为10
   --token <TelegramBotToken> - 必选，Telegram Bot Token
   --proxy <HTTPProxy> - 可选，以 http:// 开头的代理
 `;
@@ -83,10 +83,13 @@ async function notifySubscriberChats(vtb){
         console.log('Checking ' + vtb.mid);
         try {
             const formData = new FormData();
-            formData.append('userId', vtb.mid); // 使用 vtb.mid 而不是未定义的 mid
-            formData.append('info', 'media fanGrade');
-
+            formData.append('userId', vtb.mid);
+            formData.append('info', 'media');
             const axiosConfig = {
+				params: {
+					'userId': mid,
+					'info': 'media'
+				},
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
                     'x-device-info': '{"t":"webPc","v":"1.0","ui":24631221}',
@@ -123,12 +126,12 @@ async function notifySubscriberChats(vtb){
                     vtb.liveStatus=startTime;
                     notifySubscriberChats(vtb);
                 }
-
-                console.log('OK! Waiting ' + interval + 's to next checking. ');
+                console.log('online! Waiting ' + interval + 's to next checking. ');
             } else {
                 console.error('Error: ' + response.status);
                 if (err.response.data) {
                     console.error('Error Message: ' + JSON.stringify(err.response.data));
+					console.error('offline');
                     startTime = "";
                     if(startTime!=vtb.liveStatus){
                         dbm.updateVtbColumn('liveStatus',startTime,vtb.mid);

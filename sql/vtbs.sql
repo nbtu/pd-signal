@@ -25,7 +25,7 @@ CREATE TABLE "vtbs" (
   "usernick" TEXT,
   "liveStatus" TEXT DEFAULT null,
   "title" TEXT,
-  "platform" TEXT DEFAULT "panda",
+  "platform" TEXT DEFAULT null,
   "hls" TEXT,
   PRIMARY KEY ("mid", "username")
 );
