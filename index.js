@@ -83,7 +83,7 @@ async function notifySubscriberChats(vtb){
         console.log('Checking ' + vtb.mid);
         try {
             const formData = new FormData();
-            formData.append('userId', vtb.mid); // 使用 vtb.mid 而不是未定义的 mid
+            formData.append('userId', vtb.mid); 
             formData.append('info', 'media fanGrade');
 
             const axiosConfig = {
@@ -148,27 +148,3 @@ async function notifySubscriberChats(vtb){
     // 其他逻辑
     setImmediate(rotate);
 })();
-
-
-const http = require('http');
-
-const server = http.createServer((req, res) => {
-  // 读取 log.txt 文件内容
-  fs.readFile('log.txt', 'utf8', (err, data) => {
-    if (err) {
-      res.writeHead(500, {'Content-Type': 'text/plain'});
-      res.end('Error reading log file');
-      return;
-    }
-
-    // 设置响应头
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    // 将 log.txt 文件内容写入响应
-    res.end(data);
-  });
-});
-
-server.listen(3000, () => {
-  console.log('日志服务器已启动，正在监听端口 3000');
-});
-
