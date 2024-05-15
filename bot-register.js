@@ -4,7 +4,6 @@ const dbm = require('./dbm');
 
 module.exports = function(whitelist, blacklist, pass) {
     return function() {
-        
     function authorize(userId, whitelist, blacklist) {
             // 如果白名单不为空，只有白名单中的用户可以使用bot
             if (whitelist.length > 0) {
@@ -36,6 +35,7 @@ module.exports = function(whitelist, blacklist, pass) {
     /add \`<用户ID>\` - 添加新主播至监控列表。
     /del \`<用户ID>\` - 输入后，在弹出的键盘中选择需要删除的主播。
     /list - 查看您的监控列表。
+    /id  - 查看您的Telegram ID。
     /admin <pass> - 管理黑白名单。
     /help - 显示帮助。
     🎥-->放录像|🔒-->密码房|🔞-->限制房|💰-->粉丝房。
@@ -43,7 +43,7 @@ module.exports = function(whitelist, blacklist, pass) {
     });
     
     $.bot.onText(/\/id/, msg => {
-        $.bot.sendMessage(msg.chat.id, '您的 Telegram ID 是：' + msg.from.id );
+        $.bot.sendMessage(msg.chat.id, '您的 Telegram ID 是：  `'+msg.from.id+'`', $.defTgMsgForm);
     });
 
     $.bot.on('text',msg=>{
@@ -161,21 +161,19 @@ module.exports = function(whitelist, blacklist, pass) {
         }
     });
     
-    
     $.bot.onText(/^\/delwhitelist$/, msg => {
         $.bot.sendMessage(msg.chat.id, '请输入 /delwhitelist <pass> <tgig> 删除白名单用户。', $.defTgMsgForm);
     });
-    $.bot.onText(/\/delwhitelist\s+(.+)\s+(\d+)/,(msg,match)=>{
+    $.bot.onText(/\/delwhitelist\s+(.+)\s+(-?\d+)/,(msg,match)=>{
         const token = match[1].trim();
         // 检查 pass 是否匹配预定义的密码
         if (token === pass) {
-            
-            let userId=match[2].toString().trim();
-            if(!$.isInt(userId)){
+            let userId = parseInt(match[2]);
+            if (!Number.isInteger(userId)) {
                 $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
                 return;
             }
-            if(dbm.existsList(userId)){
+            if(!dbm.existsList(userId)){
                 $.bot.sendMessage(msg.chat.id,'该用户不白名单列表中。',$.defTgMsgForm);
                 return;
             }
@@ -191,17 +189,16 @@ module.exports = function(whitelist, blacklist, pass) {
     $.bot.onText(/^\/delblacklist$/, msg => {
         $.bot.sendMessage(msg.chat.id, '请输入 /delblacklist <pass> <tgig> 删除黑名单用户。', $.defTgMsgForm);
     });
-    $.bot.onText(/\/delblacklist\s+(.+)\s+(\d+)/,(msg,match)=>{
+    $.bot.onText(/\/delblacklist\s+(.+)\s+(-?\d+)/,(msg,match)=>{
         const token = match[1].trim();
         // 检查 pass 是否匹配预定义的密码
         if (token === pass) {
-            
-            let userId=match[2].toString().trim();
-            if(!$.isInt(userId)){
+            let userId = parseInt(match[2]);
+            if (!Number.isInteger(userId)) {
                 $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
                 return;
             }
-            if(dbm.existsList(userId)){
+            if(!dbm.existsList(userId)){
                 $.bot.sendMessage(msg.chat.id,'该用户不黑名单列表中。',$.defTgMsgForm);
                 return;
             }
@@ -217,13 +214,13 @@ module.exports = function(whitelist, blacklist, pass) {
     $.bot.onText(/^\/whitelist$/, msg => {
         $.bot.sendMessage(msg.chat.id, '请输入 /whitelist <pass> <tgig> 添加白名单用户。', $.defTgMsgForm);
     });
-    $.bot.onText(/\/whitelist\s+(.+)\s+(\d+)/, (msg, match) => {
+    $.bot.onText(/\/whitelist\s+(.+)\s+(-?\d+)/, (msg, match) => {
         const token = match[1].trim();
         // 检查 pass 是否匹配预定义的密码
         if (token === pass) {
-            let userId=match[2].toString().trim();
+            let userId = parseInt(match[2]);
             console.log(userId);
-            if(!$.isInt(userId)){
+            if (!Number.isInteger(userId)) {
                 $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
                 return;
             }
@@ -243,12 +240,12 @@ module.exports = function(whitelist, blacklist, pass) {
     $.bot.onText(/^\/blacklist$/, msg => {
         $.bot.sendMessage(msg.chat.id, '请输入 /blacklist <pass> <tgid> 添加黑名单用户。', $.defTgMsgForm);
     });
-    $.bot.onText(/\/blacklist\s+(.+)\s+(\d+)/, (msg, match) => {
+    $.bot.onText(/\/blacklist\s+(.+)\s+(-?\d+)/, (msg, match) => {
         const token = match[1].trim();
         // 检查 pass 是否匹配预定义的密码
         if (token === pass) {
-            let userId=match[2].toString().trim();
-            if(!$.isInt(userId)){
+            let userId = parseInt(match[2]);
+            if (!Number.isInteger(userId)) {
                 $.bot.sendMessage(msg.chat.id,'请输入正确的ID。',$.defTgMsgForm);
                 return;
             }
@@ -312,8 +309,6 @@ function _addWatchByMid(msg,mid){
         $.bot.sendMessage(msg.chat.id,'该主播已在您的监控列表中。',$.defTgMsgForm);
         return;
     }
-    
-    
     const FormData = require('form-data');
     const formData = new FormData();
     formData.append('userId', mid);
