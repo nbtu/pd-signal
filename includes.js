@@ -32,6 +32,10 @@ const includes={
     formatWatchMessagePartial(arr){
         let str='';
         for(let vtb of arr){
+            // 如果没有 liveStatus，则跳过当前的 VTB 条目
+            if (!vtb.liveStatus) {
+                continue;
+            }
             // 将标题中的特殊字符替换为空字符串
             const cleanedTitle = vtb.title.replace(/[\[\].\-_()]/g, '');
             str+=vtb.liveStatus?'🟢  ':'🔴  ';
@@ -40,6 +44,26 @@ const includes={
             str+=vtb.liveStatus?'  ['+cleanedTitle+'](https://5721004.xyz/player/pandalive.html?url='+vtb.mid+')\n':'';
             str+='\n';
         }
+        return str;
+    },
+    listWatchMessagePartial(arr){
+        let online = '';
+        let offline = '';
+        for(let vtb of arr){
+            // 将标题中的特殊字符替换为空字符串
+            const cleanedTitle = vtb.title.replace(/[\[\].\-_()]/g, '');
+            const message = '`' + vtb.username + '`' + '(`' + vtb.usernick + '`)\n';
+            const link = vtb.liveStatus ? ' [' + cleanedTitle + '](https://5721004.xyz/player/pandalive.html?url=' + vtb.mid + ')\n' : '';
+
+            if(vtb.liveStatus) {
+                online += '🟢  ' + message + link + '\n';
+            } else {
+                offline += '🔴  ' + message + link + '\n';
+            }
+        }
+        // 合并在线和离线主播信息
+        let str = online + offline;
+
         return str;
     },
     emitter:new EventEmitter(),
